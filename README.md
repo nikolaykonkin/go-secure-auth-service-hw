@@ -1,325 +1,152 @@
-# Практическое задание: Безопасный сервис аутентификации
+# Практическое задание: Безопасный сервис аутентификации — Конкин Николай
+
+Форк оригинального шаблона: [netology-code/goprod](https://github.com/netology-code/goprod)
+Репозиторий с решением: [nikolaykonkin/go-secure-auth-service-hw](https://github.com/nikolaykonkin/go-secure-auth-service-hw)
 
 ## 🎯 Цель задания
 
 Разработать безопасный REST API сервис с функциями регистрации и аутентификации пользователей на Go.
 
-## 📋 Что нужно реализовать
+## 📋 Реализованный функционал
 
-### Обязательный функционал:
-- ✅ **Регистрация пользователя** с хешированием пароля (bcrypt)
-- ✅ **Вход в систему** с выдачей JWT токена
-- ✅ **Защищенный эндпоинт** для получения профиля (требует JWT)
-- ✅ **Защита от SQL-инъекций** (параметризованные запросы)
+- ✅ Регистрация пользователя с хешированием пароля (bcrypt)
+- ✅ Вход в систему с выдачей JWT токена
+- ✅ Защищённый эндпоинт для получения профиля (требует JWT)
+- ✅ Защита от SQL-инъекций (параметризованные запросы)
 
-### API эндпоинты:
-| Метод | Путь | Описание | Требует токен |
-|-------|------|----------|--------------|
-| POST | `/register` | Регистрация пользователя | Нет |
-| POST | `/login` | Вход в систему | Нет |
-| GET | `/profile` | Получить профиль | **Да** |
-| GET | `/health` | Проверка состояния | Нет |
+### API эндпоинты
+
+| Метод | Путь        | Описание                 | Требует токен |
+| ----- | ----------- | ------------------------ | ------------- |
+| POST  | `/register` | Регистрация пользователя | Нет           |
+| POST  | `/login`    | Вход в систему           | Нет           |
+| GET   | `/profile`  | Получить профиль         | **Да**        |
+| GET   | `/health`   | Проверка состояния       | Нет           |
 
 ## 🏗️ Структура проекта
 
 ```
-secure-service/
 ├── main.go              # Главный файл с запуском сервера
-├── handlers.go          # HTTP обработчики
+├── handlers.go          # HTTP обработчики (реализовано)
 ├── models.go            # Структуры данных
-├── database.go          # Работа с БД
-├── auth.go              # JWT и bcrypt
-├── middleware.go        # Проверка токена
+├── database.go          # Работа с БД (реализовано)
+├── auth.go              # JWT и bcrypt (реализовано)
+├── middleware.go        # Проверка токена (реализовано)
 ├── docker-compose.yml   # PostgreSQL в Docker
 ├── init.sql             # Схема БД
-├── .env                 # Конфигурация (создать из .env.example)
-├── go.mod               # Зависимости
-└── README.md           # Этот файл
+├── .env.example          # Пример конфигурации
+├── go.mod                # Зависимости
+├── img/                   # Скриншоты результатов тестирования
+└── README.md             # Этот файл
 ```
 
-## 🚀 Быстрый старт
+## 🔒 Как выполнены требования безопасности
 
-### 1. Настройка окружения
-
-```bash
-# Создайте .env файл из примера
-cp .env.example .env
-
-# ВАЖНО: Измените JWT_SECRET в .env на свой ключ (минимум 32 символа)
-nano .env
-```
-
-### 2. Запуск базы данных
-
-```bash
-# Запустите PostgreSQL в Docker
-docker-compose up -d
-
-# Проверьте, что БД запустилась
-docker-compose ps
-```
-
-### 3. Установка зависимостей
-
-```bash
-# Скачайте Go модули
-go mod download
-```
-
-### 4. Что нужно реализовать
-
-Все файлы с пометкой TODO содержат заготовки функций, которые нужно завершить:
-
-#### 📄 `database.go` - Работа с базой данных
-- [ ] `CreateUser()` - создание пользователя
-- [ ] `GetUserByEmail()` - поиск по email
-- [ ] `GetUserByID()` - поиск по ID
-- [ ] `UserExistsByEmail()` - проверка существования
-
-#### 🔐 `auth.go` - Аутентификация и безопасность
-- [ ] `HashPassword()` - хеширование паролей bcrypt
-- [ ] `CheckPassword()` - проверка паролей
-- [ ] `GenerateToken()` - создание JWT токенов
-- [ ] `ValidateToken()` - проверка JWT токенов
-
-#### 🛡️ `middleware.go` - Защита эндпоинтов
-- [ ] `AuthMiddleware()` - проверка токенов
-
-#### 🌐 `handlers.go` - HTTP обработчики
-- [ ] `RegisterHandler()` - регистрация
-- [ ] `LoginHandler()` - авторизация
-- [ ] `ProfileHandler()` - профиль пользователя
-
-## 📝 Пошаговое руководство
-
-### Шаг 1: Реализуйте функции безопасности (`auth.go`)
+### 1. Пароли хешируются bcrypt (`auth.go`)
 
 ```go
-// Импортируйте необходимые пакеты
-import (
-    "golang.org/x/crypto/bcrypt"
-    "github.com/golang-jwt/jwt/v5"
-)
-
-// Реализуйте HashPassword
 func HashPassword(password string) (string, error) {
     bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-    return string(bytes), err
-}
-```
-
-### Шаг 2: Реализуйте работу с БД (`database.go`)
-
-```go
-// ВАЖНО: Используйте параметризованные запросы!
-func CreateUser(email, username, passwordHash string) (*User, error) {
-    query := `INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING id, created_at`
-    // Реализуйте...
-}
-```
-
-### Шаг 3: Реализуйте middleware (`middleware.go`)
-
-```go
-func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
-    return func(w http.ResponseWriter, r *http.Request) {
-        // 1. Получите токен из заголовка Authorization
-        // 2. Проверьте формат "Bearer <token>"
-        // 3. Валидируйте токен
-        // 4. Добавьте данные в контекст
-        // 5. Передайте управление дальше
+    if err != nil {
+        return "", fmt.Errorf("failed to hash password: %v", err)
     }
+    return string(bytes), nil
 }
 ```
 
-### Шаг 4: Реализуйте обработчики (`handlers.go`)
+Пароль нигде в коде не сохраняется и не логируется в открытом виде — в БД записывается только `passwordHash`.
 
-Каждый обработчик содержит детальные комментарии с пошаговыми инструкциями.
+### 2. SQL запросы параметризованы (`database.go`)
 
-### Шаг 5: Запустите и протестируйте
+Все запросы используют плейсхолдеры `$1, $2...`, нигде не применяется `fmt.Sprintf` для построения SQL:
 
-```bash
-# Запустите сервер
-go run *.go
-
-# В другом терминале тестируйте API
-curl -X POST http://localhost:8080/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","username":"testuser","password":"SecurePass123"}'
-```
-
-## 🧪 Тестирование API
-
-### 1. Проверка здоровья сервиса
-```bash
-curl http://localhost:8080/health
-```
-
-### 2. Регистрация пользователя
-```bash
-curl -X POST http://localhost:8080/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@example.com",
-    "username": "testuser",
-    "password": "SecurePass123"
-  }'
-```
-
-### 3. Вход в систему
-```bash
-curl -X POST http://localhost:8080/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@example.com",
-    "password": "SecurePass123"
-  }'
-```
-
-### 4. Получение профиля (с токеном)
-```bash
-# Замените YOUR_JWT_TOKEN на токен из ответа /login
-curl http://localhost:8080/profile \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
-
-## 🔒 Требования безопасности
-
-### ✅ Обязательные требования:
-
-1. **Пароли хешируются bcrypt**
-   ```go
-   // ❌ НЕПРАВИЛЬНО
-   user.Password = password
-
-   // ✅ ПРАВИЛЬНО
-   hash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-   ```
-
-2. **SQL запросы параметризованы**
-   ```go
-   // ❌ ОПАСНО - SQL инъекции!
-   query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", email)
-
-   // ✅ БЕЗОПАСНО
-   query := "SELECT * FROM users WHERE email = $1"
-   db.QueryRow(query, email)
-   ```
-
-3. **JWT токены проверяются**
-   ```go
-   // ❌ БЕЗ ПРОВЕРКИ
-   func ProfileHandler(w http.ResponseWriter, r *http.Request) {
-       // Сразу возвращаем данные
-   }
-
-   // ✅ С ПРОВЕРКОЙ
-   http.HandleFunc("/profile", AuthMiddleware(ProfileHandler))
-   ```
-
-## 🐛 Частые ошибки
-
-### 1. Пароли в открытом виде
-```sql
--- ❌ ПЛОХО: пароль не захеширован
-SELECT password_hash FROM users; -- "123456"
-
--- ✅ ХОРОШО: bcrypt хеш
--- "$2a$10$N9qo8uLOickgx2ZMRZoMye..."
-```
-
-### 2. SQL инъекции
 ```go
-// ❌ УЯЗВИМО
-query := "SELECT * FROM users WHERE email = '" + email + "'"
-
-// ✅ ЗАЩИЩЕНО
-query := "SELECT * FROM users WHERE email = $1"
-db.QueryRow(query, email)
+query := `INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING id, created_at`
+err := db.QueryRow(query, email, username, passwordHash).Scan(&user.ID, &user.CreatedAt)
 ```
 
-### 3. JWT не проверяется
-```go
-// ❌ ОПАСНО
-func ProfileHandler(w http.ResponseWriter, r *http.Request) {
-    // Нет проверки токена!
-}
+То же самое для `GetUserByEmail`, `GetUserByID`, `UserExistsByEmail` — во всех четырёх функциях запросы параметризованы.
 
-// ✅ БЕЗОПАСНО
+### 3. JWT токены проверяются (`middleware.go`)
+
+Эндпоинт `/profile` подключён через `AuthMiddleware`:
+
+```go
 http.HandleFunc("/profile", AuthMiddleware(ProfileHandler))
 ```
 
-## ✅ Чек-лист перед сдачей
+`AuthMiddleware` проверяет наличие заголовка `Authorization`, формат `Bearer <token>`, валидирует подпись токена (проверка алгоритма HMAC) и только после этого передаёт управление `ProfileHandler`. Без токена или с невалидным токеном возвращается `401 Unauthorized`.
 
-- [ ] PostgreSQL запускается через `docker-compose up`
-- [ ] Приложение подключается к БД и не падает
-- [ ] Регистрация создает пользователя в БД
-- [ ] Пароли хранятся как bcrypt хеш, НЕ в открытом виде
-- [ ] Вход возвращает валидный JWT токен
-- [ ] Токен можно декодировать на https://jwt.io
-- [ ] Эндпоинт `/profile` требует токен (без токена → 401)
-- [ ] Эндпоинт `/profile` работает с правильным токеном
-- [ ] **ВСЕ** SQL запросы используют параметры `$1, $2...`
-- [ ] В коде НЕТ `fmt.Sprintf` для построения SQL
+## 🚀 Быстрый старт
 
-## 🔍 Проверка безопасности
-
-### Проверьте хеширование паролей:
 ```bash
-# Подключитесь к БД
-docker exec -it secure_service_db psql -U postgres -d secure_service
+# Настройка окружения
+cp .env.example .env
+# Изменить JWT_SECRET в .env на свой ключ (минимум 32 символа)
 
-# Проверьте хеши паролей
-SELECT email, password_hash FROM users;
+# Запуск базы данных
+docker-compose up -d
 
-# Хеш должен начинаться с $2a$ или $2b$
-\q
+# Установка зависимостей и запуск
+go mod download
+go run *.go
 ```
 
-### Проверьте JWT токен:
-1. Скопируйте токен из ответа `/login`
-2. Вставьте на https://jwt.io
-3. Убедитесь, что содержит `user_id`, `email`, `username`
+## ✅ Результаты тестирования
 
-## 🆘 Получение помощи
+Все пункты чек-листа из задания проверены локально — ниже приведены скриншоты, подтверждающие работоспособность каждого требования.
 
-### Если что-то не работает:
+### 1. Проверка состояния сервиса
 
-1. **БД не запускается**
-   ```bash
-   docker-compose down
-   docker-compose up -d
-   docker-compose logs postgres
-   ```
+Сервер запущен и подключение к БД активно:
 
-2. **Ошибки компиляции**
-   ```bash
-   go mod tidy
-   go mod download
-   ```
+![Проверка health-эндпоинта](https://github.com/nikolaykonkin/go-secure-auth-service-hw/blob/main/img/01-health-check.png)
 
-3. **Сервер не запускается**
-   - Проверьте .env файл
-   - Убедитесь, что JWT_SECRET длиннее 32 символов
-   - Проверьте, что PostgreSQL запущен
+### 2. Регистрация пользователя
 
-4. **Тесты API не проходят**
-   - Проверьте логи сервера
-   - Убедитесь, что все TODO функции реализованы
-   - Проверьте правильность JSON в curl запросах
+Запрос `POST /register` создаёт пользователя и возвращает JWT токен вместе с данными пользователя (без `password_hash` — поле исключено из JSON тегом `json:"-"`):
 
-## 🎯 Критерии оценки
+![Ответ на регистрацию](https://github.com/nikolaykonkin/go-secure-auth-service-hw/blob/main/img/02-register-response.png)
 
-### "Зачёт" - все требования выполнены:
-- ✅ Регистрация и авторизация работают
-- ✅ Пароли хешируются bcrypt
-- ✅ JWT токены используются правильно
-- ✅ SQL запросы параметризованы
-- ✅ Защищенные эндпоинты требуют токен
-- ✅ Код компилируется и запускается
+### 3. Пароль сохранён как bcrypt-хеш, а не в открытом виде
 
-### "На доработку":
-- ❌ Пароли в открытом виде
-- ❌ SQL инъекции возможны
-- ❌ JWT не проверяются
-- ❌ Код не компилируется
+Прямая проверка через `psql` — в столбце `password_hash` виден хеш, начинающийся с `$2a$` или `$2b$`, самого пароля в БД нет:
+
+![Хеш пароля в базе данных](https://github.com/nikolaykonkin/go-secure-auth-service-hw/blob/main/img/03-password-hash-in-db.png)
+
+### 4. Вход в систему
+
+Запрос `POST /login` с верными учётными данными возвращает валидный JWT токен:
+
+![Ответ на вход в систему](https://github.com/nikolaykonkin/go-secure-auth-service-hw/blob/main/img/04-login-response.png)
+
+### 5. Токен корректно декодируется на jwt.io
+
+Токен из ответа `/login`, вставленный на [jwt.io](https://jwt.io), содержит `user_id`, `email` и `username`:
+
+![Декодированный JWT токен на jwt.io](https://github.com/nikolaykonkin/go-secure-auth-service-hw/blob/main/img/05-jwt-io-decoded.png)
+
+### 6. Запрос `/profile` без токена → 401
+
+Защищённый эндпоинт отклоняет запрос без заголовка `Authorization`:
+
+![Профиль без токена — 401 Unauthorized](https://github.com/nikolaykonkin/go-secure-auth-service-hw/blob/main/img/06-profile-unauthorized.png)
+
+### 7. Запрос `/profile` с валидным токеном → 200
+
+С правильным токеном в заголовке `Authorization: Bearer <token>` эндпоинт возвращает данные профиля:
+
+![Профиль с валидным токеном](https://github.com/nikolaykonkin/go-secure-auth-service-hw/blob/main/img/07-profile-authorized.png)
+
+## 📝 Чек-лист перед сдачей
+
+- [x] PostgreSQL запускается через `docker-compose up`
+- [x] Приложение подключается к БД и не падает
+- [x] Регистрация создаёт пользователя в БД
+- [x] Пароли хранятся как bcrypt хеш, НЕ в открытом виде
+- [x] Вход возвращает валидный JWT токен
+- [x] Токен декодируется на https://jwt.io
+- [x] Эндпоинт `/profile` требует токен (без токена → 401)
+- [x] Эндпоинт `/profile` работает с правильным токеном
+- [x] **ВСЕ** SQL запросы используют параметры `$1, $2...`
+- [x] В коде НЕТ `fmt.Sprintf` для построения SQL
